@@ -166,7 +166,7 @@ def send_rich_preview(item):
     if len(caption) > 1024:
         caption = caption[:1021] + '...'
     buttons = [[{'text': 'Buka @kisahmu356', 'url': 'https://www.instagram.com/kisahmu356/'},
-                {'text': 'Share IG Post', 'url': 'https://www.instagram.com/create/post/'}]]
+                {'text': 'Share IG Post', 'web_app': {'url': 'https://fariqsalafy.github.io/autoinsta/'}}]]
     payload = {
         'chat_id': TELEGRAM_CHAT_ID,
         'caption': caption,
