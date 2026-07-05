@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Share to Instagram - @kisahmu356</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,sans-serif;background:#0f2027;color:#fff;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+  .card{background:#1b1b2f;border:1px solid #d4af37;border-radius:16px;padding:24px;max-width:420px;width:100%;text-align:center}
+  h1{font-size:22px;margin:0 0 8px;color:#d4af37}
+  p{font-size:14px;color:#b8c9b8;margin:0 0 18px}
+  .btn{display:inline-block;width:100%;background:#d4af37;color:#0f2027;font-weight:700;border:none;border-radius:12px;padding:14px 16px;font-size:16px;text-decoration:none}
+  .btn.secondary{background:#2d5a27;color:#fff;margin-top:10px}
+  .preview{width:100%;border-radius:12px;margin-bottom:14px;max-height:260px;object-fit:cover}
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>Share ke Instagram</h1>
+    <p>Kirim postingan ini ke akun <b>@kisahmu356</b>.</p>
+    <img id="preview" class="preview" src="https://via.placeholder.com/1080x1350/0f2027/d4af37?text=Preview+Kisah+Mu" alt="preview">
+    <a id="shareBtn" class="btn" href="#">Share via IG</a>
+    <a id="fallbackBtn" class="btn secondary" href="https://www.instagram.com/create/post/" target="_blank">Buka IG Create</a>
+  </div>
+
+  <script>
+    const tg = window.Telegram?.WebApp;
+    if (tg) tg.ready();
+
+    const shareBtn = document.getElementById('shareBtn');
+    const fallbackBtn = document.getElementById('fallbackBtn');
+    const preview = document.getElementById('preview');
+
+    // Data dari Telegram initData / query param
+    const params = new URLSearchParams(location.search);
+    const title = params.get('title') || 'KisahMu';
+    const body = params.get('body') || '';
+    const image = params.get('image') || '';
+    const webAppUrl = params.get('web_app_url') || '';
+
+    if (image) preview.src = image;
+
+    // 1) Try native share
+    function nativeShare() {
+      const shareData = {
+        title: title,
+        text: body + '\n\n@kisahmu356',
+      };
+      if (navigator.canShare && navigator.canShare(shareData)) {
+        navigator.share(shareData).catch(() => fallback());
+      } else {
+        fallback();
+      }
+    }
+
+    // 2) Fallback deep link / web create
+    function fallback() {
+      window.open('https://www.instagram.com/create/post/', '_blank');
+    }
+
+    shareBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      nativeShare();
+    });
+  </script>
+</body>
+</html>
