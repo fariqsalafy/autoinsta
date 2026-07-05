@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Content Hub Admin</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif; background: #0b1220; color: #e5e7eb; }
+  header { padding: 18px 20px; border-bottom: 1px solid #1f2937; display: flex; gap: 16px; align-items: center; justify-content: space-between; }
+  .container { padding: 20px; max-width: 1200px; margin: 0 auto; }
+  .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+  .card { background: #0f172a; border: 1px solid #1f2937; padding: 16px; border-radius: 12px; }
+  .muted { color: #9ca3af; font-size: 13px; }
+  .tabs { display: flex; gap: 10px; margin-bottom: 18px; }
+  .tab { padding: 9px 13px; background: #0f172a; border: 1px solid #1f2937; color: #e5e7eb; border-radius: 10px; cursor: pointer; }
+  .tab.active { background: #1f2937; }
+  button, .button { padding: 10px 13px; background: #2563eb; color: white; border: 0; border-radius: 10px; cursor: pointer; }
+  input, select, textarea { padding: 10px; background: #0b1220; color: #e5e7eb; border: 1px solid #1f2937; border-radius: 10px; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { padding: 10px; border-bottom: 1px solid #1f2937; text-align: left; }
+  .pill { display: inline-block; padding: 4px 10px; background: #16a34a33; color: #86efac; border-radius: 9999px; font-size: 12px; }
+  .row { display: grid; gap: 14px; grid-template-columns: repeat(3, 1fr); }
+  .full { grid-column: 1 / -1; }
+  @media (max-width: 768px) { .cards, .row { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1 style="margin:0;font-size:18px">Content Hub Admin</h1>
+      <div class="muted">Panel kontrol posting Telegram / WhatsApp / Instagram / YouTube</div>
+    </div>
+    <div class="muted" id="status">checking...</div>
+  </header>
+
+  <main class="container">
+    <section class="cards">
+      <div class="card"><div class="muted">Konten</div><div id="s-content" style="font-size:24px;font-weight:700">-</div></div>
+      <div class="card"><div class="muted">Hari ini</div><div id="s-today" style="font-size:24px;font-weight:700">-</div></div>
+      <div class="card"><div class="muted">Revenue</div><div id="s-revenue" style="font-size:24px;font-weight:700">-</div></div>
+    </section>
+
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('content')">Konten</div>
+      <div class="tab" onclick="switchTab('schedule')">Jadwal</div>
+      <div class="tab" onclick="switchTab('stats')">Stats</div>
+      <div class="tab" onclick="switchTab('orders')">Orders</div>
+      <div class="tab" onclick="switchTab('settings')">Settings</div>
+    </div>
+
+    <section id="tab-content">
+      <div class="row">
+        <input id="title" placeholder="Judul konten" />
+        <select id="category"><option>general</option><option>tutorial</option><option>tips</option><option>entertainment</option><option>rekomendasi</option></select>
+        <button onclick="createContent()">Tambah Konten</button>
+      </div>
+      <div class="row" style="margin-top:12px">
+        <textarea id="body" rows="3" placeholder="Caption / Deskripsi"></textarea>
+        <input id="tags" placeholder="Tags: contoh tips,reels,viral" />
+      </div>
+      <div style="margin-top:12px; padding:12px; background:#0f172a; border:1px dashed #1f2937; border-radius:12px;">
+        Upload media: <input type="file" id="file" />
+        <button style="margin-left:8px" onclick="uploadFile()">Upload</button>
+      </div>
+      <div class="muted" id="upload-status"></div>
+      <table style="margin-top:16px">
+        <thead><tr><th>ID</th><th>Judul</th><th>Kategori</th><th>Status</th><th>Dibuat</th><th>Aksi</th></tr></thead>
+        <tbody id="content-table"></tbody>
+      </table>
+    </section>
+
+    <section id="tab-schedule" hidden>
+      <div class="row">
+        <select id="sch-platform"><option>telegram</option><option>instagram</option><option>youtube</option><option>whatsapp</option><option>tiktok</option></select>
+        <input id="sch-id" type="number" placeholder="content id" />
+        <input id="sch-time" type="datetime-local" />
+        <button onclick="createSchedule()">Jadwalkan Sekarang</button>
+      </div>
+      <table style="margin-top:16px">
+        <thead><tr><th>ID</th><th>Platform</th><th>Jadwal</th><th>Status</th><th>Posted</th><th>URL</th></tr></thead>
+        <tbody id="schedule-table"></tbody>
+      </table>
+    </section>
+
+    <section id="tab-stats" hidden>
+      <select id="stats-platform" onchange="loadStats()"><option value="">Semua</option><option>telegram</option><option>instagram</option><option>youtube</option></select>
+      <table style="margin-top:12px">
+        <thead><tr><th>Date</th><th>Platform</th><th>Views</th><th>Clicks</th><th>Orders</th><th>Revenue</th></tr></thead>
+        <tbody id="stats-table"></tbody>
+      </table>
+    </section>
+
+    <section id="tab-orders" hidden>
+      <table style="margin-top:8px">
+        <thead><tr><th>ID</th><th>Platform</th><th>User</th><th>Produk</th><th>Amount</th><th>Status</th><th>Created</th></tr></thead>
+        <tbody id="orders-table"></tbody>
+      </table>
+    </section>
+
+    <section id="tab-settings" hidden>
+      <div class="row" style="margin-bottom:12px">
+        <select id="setting-platform"></select>
+        <input id="setting-key" placeholder="api_key / token" />
+        <input id="setting-secret" placeholder="api_secret (opsional)" />
+        <button onclick="saveSettings()">Save</button>
+      </div>
+      <table style="margin-top:8px">
+        <thead><tr><th>Platform</th><th>Enabled</th><th>API Key</th><th>Aksi</th></tr></thead>
+        <tbody id="settings-table"></tbody>
+      </table>
+    </section>
+  </main>
+
+  <script>
+    const API = '';
+    async function j(url, opt = {}) {
+      opt.headers = opt.headers || {};
+      opt.headers['Content-Type'] = 'application/json';
+      const r = await fetch(url, opt);
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    }
+    document.getElementById('status').textContent = 'live';
+    let lastMedia = '';
+    async function uploadFile() {
+      const f = document.getElementById('file').files[0];
+      if (!f) return;
+      const fd = new FormData();
+      fd.append('file', f);
+      const r = await fetch('/api/upload', { method: 'POST', body: fd });
+      const data = await r.json();
+      document.getElementById('upload-status').textContent = r.ok ? ('uploaded: ' + data.path) : JSON.stringify(data);
+      if (data.path) lastMedia = data.path;
+    }
+    async function createContent() {
+      const payload = { title: document.getElementById('title').value, body: document.getElementById('body').value, category: document.getElementById('category').value };
+      // deduplicate safe tags
+      payload['affiliate_tags'] = document.getElementById('tags').value.split(',').map(s=>s.trim()).filter(Boolean);
+      const r = await fetch('/api/content', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+      const data = await r.json();
+      if (r.ok) alert('created id ' + data.id); else alert(JSON.stringify(data));
+    }
+    async function loadContent() {
+      const data = await j('/api/content');
+      const tbody = document.getElementById('content-table');
+      tbody.innerHTML = data.items.map(x => `<tr><td>${x.id}</td><td>${escape(x.title)}</td><td>${x.category||'-'}</td><td><span class="pill">${x.status}</span></td><td>${x.created_at}</td><td><button onclick="postNow(${x.id})">Post Now</button></td></tr>`).join('');
+      document.getElementById('s-content').textContent = (data.total||0);
+    }
+    async function createSchedule() {
+      const platform = document.getElementById('sch-platform').value;
+      const content_id = Number(document.getElementById('sch-id').value);
+      const time = document.getElementById('sch-time').value;
+      if (!content_id || !time) return alert('isi content id dan waktu');
+      const r = await fetch('/api/schedule', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ content_id, platform, scheduled_at: new Date(time).toISOString() }) });
+      const data = await r.json();
+      if (r.ok) alert('scheduled ' + data.id); else alert(JSON.stringify(data));
+    }
+    async function loadSchedule() {
+      const data = await j('/api/schedule');
+      document.getElementById('schedule-table').innerHTML = data.items.slice(0, 50).map(x => `<tr><td>${x.id}</td><td>${x.platform}</td><td>${x.scheduled_at}</td><td><span class="pill">${x.status}</span></td><td>${x.posted_at||'-'}</td><td>${x.post_url? `<a target="_blank" href="${x.post_url}">link</a>`:'-'}</td></tr>`).join('');
+    }
+    async function loadStats() {
+      const platform = document.getElementById('stats-platform').value;
+      const url = '/api/stats' + (platform ? ('?platform=' + encodeURIComponent(platform)) : '');
+      const data = await j(url);
+      document.getElementById('stats-table').innerHTML = data.items.map(x => `<tr><td>${x.date}</td><td>${x.platform}</td><td>${x.views}</td><td>${x.clicks}</td><td>${x.orders}</td><td>${x.revenue}</td></tr>`).join('');
+    }
+    async function loadOrders() {
+      const data = await j('/api/orders');
+      document.getElementById('orders-table').innerHTML = data.items.map(x => `<tr><td>${x.id}</td><td>${x.platform}</td><td>${escape(x.user)}</td><td>${escape(x.product)}</td><td>${x.amount}</td><td>${x.status}</td><td>${x.created_at}</td></tr>`).join('');
+    }
+    async function loadSettings() {
+      const data = await j('/api/settings');
+      const sel = document.getElementById('setting-platform');
+      sel.innerHTML = data.items.map(x => `<option value="${x.id}">${x.name}</option>`).join('');
+      document.getElementById('settings-table').innerHTML = data.items.map(x => `<tr><td>${x.name}</td><td>${x.enabled}</td><td>${x.api_key||'-'}</td><td><button onclick="editSetting(${x.id})">Edit</button></td></tr>`).join('');
+    }
+    async function editSetting(id) {
+      const k = prompt('api_key?');
+      const s = prompt('api_secret?');
+      const r = await fetch('/api/settings/' + id, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ api_key: k, api_secret: s }) });
+      const data = await r.json();
+      if (r.ok) { alert('ok'); loadSettings(); } else alert(JSON.stringify(data));
+    }
+    async function postNow(id) {
+      const platform = prompt('Platform? telegram/instagram/youtube');
+      const r = await fetch('/api/post/now', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ content_id: id, platform }) });
+      const data = await r.json();
+      alert(data.ok ? ('post ok: ' + (data.url || data.permalink_url || data.message_id)) : JSON.stringify(data));
+    }
+    function switchTab(name) {
+      ['content','schedule','stats','orders','settings'].forEach(t => { const el = document.getElementById('tab-'+t); el.hidden = t !== name; });
+      document.querySelectorAll('.tab').forEach((x, idx) => {
+        const tabs = ['content','schedule','stats','orders','settings'];
+        x.classList.toggle('active', tabs[idx] === name);
+      });
+      if (name === 'content') loadContent();
+      if (name === 'schedule') loadSchedule();
+      if (name === 'stats') loadStats();
+      if (name === 'orders') loadOrders();
+      if (name === 'settings') loadSettings();
+    }
+    function escape(s){return (s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+    loadContent(); loadSchedule(); loadStats(); loadOrders(); loadSettings();
+  </script>
+</body>
+</html>
