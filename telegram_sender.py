@@ -7,6 +7,7 @@ Env:
 from dotenv import load_dotenv
 import os, requests
 import json, textwrap
+from urllib.parse import quote
 
 load_dotenv()
 
@@ -166,7 +167,7 @@ def send_rich_preview(item):
     if len(caption) > 1024:
         caption = caption[:1021] + '...'
     buttons = [[{'text': 'Buka @kisahmu356', 'url': 'https://www.instagram.com/kisahmu356/'},
-                {'text': 'Share IG Post', 'web_app': {'url': 'https://fariqsalafy.github.io/autoinsta/'}}]]
+                {'text': 'Buat Post IG', 'url': 'https://fariqsalafy.github.io/autoinsta/'} ]]
     payload = {
         'chat_id': TELEGRAM_CHAT_ID,
         'caption': caption,
@@ -174,17 +175,21 @@ def send_rich_preview(item):
         'reply_markup': json.dumps({'inline_keyboard': buttons})
     }
     try:
-        if media and os.path.exists(media):
-            with open(media, 'rb') as fh:
+        if media:
+            local_path = media if str(media).startswith('/') else '/sdcard/Hermes Project/autoinsta/' + str(media)
+            if os.path.exists(local_path):
+                with open(local_path, 'rb') as f:
+                    photo_bytes = f.read()
+                photo_payload = {**payload, 'photo': ('preview.jpg', photo_bytes, 'image/jpeg')}
                 r = requests.post(
                     f"{TELEGRAM_API_BASE}/sendPhoto",
-                    data=payload,
-                    files={'photo': (os.path.basename(media), fh, 'image/jpeg')},
-                    timeout=60
+                    data={k: v for k, v in photo_payload.items() if k != 'photo'},
+                    files={'photo': photo_payload['photo']},
+                    timeout=60,
                 )
-            data = r.json()
-            if data.get('ok'):
-                return data
+                data = r.json()
+                if data.get('ok'):
+                    return data
     except Exception as e:
         print('sendPhoto failed:', e)
 
